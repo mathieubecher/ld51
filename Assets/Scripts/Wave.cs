@@ -11,9 +11,10 @@ public class Wave : MonoBehaviour
     private float m_timer;
     private Animator m_animator;
     [SerializeField] private SpriteRenderer m_waveLine;
-    [SerializeField] private SpriteRenderer m_waveLine2;
     [SerializeField] private SpriteRenderer m_wave;
     [SerializeField] private SpriteRenderer m_wetSand;
+
+    [SerializeField]  private Texture m_sandRenderer;
 
     [Serializable] struct WaveSpriteSet
     {
@@ -44,10 +45,8 @@ public class Wave : MonoBehaviour
         if (m_sprites.Count > 0)
         {
             int i = (int)math.floor(Random.value * m_sprites.Count);
-            Debug.Log(i);
             m_wave.sprite = m_sprites[i].m_wave;
             m_waveLine.sprite = m_sprites[i].m_waveLine;
-            m_waveLine2.sprite = m_sprites[i].m_waveLine;
             m_wetSand.sprite = m_sprites[i].m_wetSand;
         }
 

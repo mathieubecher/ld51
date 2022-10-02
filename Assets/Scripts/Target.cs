@@ -1,15 +1,21 @@
+using System;
 using System.Numerics;
 using Mirror;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
 
 public class Target : NetworkBehaviour
 {
+    public static int NB_PLAYER = 0;
+    
     private Camera m_mainCam;
     [SerializeField] private TrailRenderer m_trailRenderer;
+    [SerializeField] private GameObject m_cursor;
 
+    private bool m_pressed = false;
     private bool m_isDrawing;
     private const int m_refreshFrequency = 15;
     private float m_refreshPosTimer = 0f;
@@ -17,8 +23,17 @@ public class Target : NetworkBehaviour
     private Vector3 m_targetPos;
     private Vector3 m_currentVelocity;
     private float m_targetSpeed;
-       
-    
+
+    private void OnEnable()
+    {
+        NB_PLAYER++;
+    }
+
+    private void OnDisable()
+    {
+        NB_PLAYER--;
+    }
+
     void Awake()
     {
         m_mainCam = Camera.main;
@@ -32,34 +47,20 @@ public class Target : NetworkBehaviour
         {
             m_trailRenderer.enabled = true;
         }
-    }
-
-    void HandleMovement()
-    {
-        if (isLocalPlayer)
+        else
         {
-            transform.position = (Vector2)m_mainCam.ScreenToWorldPoint(Input.mousePosition);
-            
-            if (Input.GetMouseButtonDown(0))
-            {
-                SetIsDrawing(true, transform.position);
-                m_refreshPosTimer = 0f;
-            }
-            else if(Input.GetMouseButtonUp(0))
-            {
-                SetIsDrawing(false, transform.position);
-                m_refreshPosTimer = 0f;
-            }
-            m_refreshPosTimer += Time.deltaTime;
-            if (m_refreshPosTimer > 1f / m_refreshFrequency)
-            {
-                m_refreshPosTimer = 0f;
-                if(m_isDrawing) SetPosition(transform.position);
-            }
+            SpawnCursor();
         }
-
     }
 
+    private void SpawnCursor()
+    {
+        Instantiate(m_cursor, transform);
+#if UNITY_EDITOR
+#else
+        Cursor.visible = false;
+#endif
+    }
     [Command] void SetIsDrawing(bool _drawable, Vector3 _position) {SetIsDrawingRPC(_drawable, _position); }
     [ClientRpc] void SetIsDrawingRPC(bool _drawable, Vector3 _position)
     {
@@ -92,7 +93,69 @@ public class Target : NetworkBehaviour
 
     void Update()
     {
-        HandleMovement();
+        if (isLocalPlayer)
+        {
+            Vector3 pos = Vector3.zero;
+            bool pressed = false;
+            
+            Pointer pointer = Pointer.current;
+            Pen pen = Pen.current;
+            Mouse mouse = Mouse.current;
+     
+            if (pen.tip.isPressed || pen.inRange.isPressed)
+            {
+                pos = pen.position.ReadValue();
+                pressed = pen.tip.isPressed;
+            }
+            else if (pointer.press.isPressed)
+            {
+                pos = pointer.position.ReadValue();
+                pressed = true;
+            }
+            else if (mouse != null) {
+                pos = mouse.position.ReadValue();
+                pressed = mouse.IsPressed();
+            }
+            
+            transform.position = (Vector2)m_mainCam.ScreenToWorldPoint(pos);
+
+            if (pressed && !m_pressed)
+            {
+                RaycastHit2D hit = Physics2D.Raycast(transform.position, -Vector2.up);
+
+                // If it hits something...
+                if (hit.collider != null)
+                {
+                    if (hit.collider.TryGetComponent<Button>(out Button button))
+                    {
+                        button.Click();
+                    }
+                }
+                else
+                {
+                    SetIsDrawing(true, transform.position);
+                }
+
+                m_refreshPosTimer = 0f;
+                m_pressed = true;
+
+            }
+            else if (!pressed && m_pressed)
+            {
+                SetIsDrawing(false, transform.position);
+                m_refreshPosTimer = 0f;
+                m_pressed = false;
+            }
+
+            m_refreshPosTimer += Time.deltaTime;
+            if (m_refreshPosTimer > 1f / m_refreshFrequency)
+            {
+                m_refreshPosTimer = 0f;
+                if (m_isDrawing) SetPosition(transform.position);
+            }
+
+            
+        }
     }
 
     void FixedUpdate()

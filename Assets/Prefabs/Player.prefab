@@ -189,6 +189,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   m_trailRenderer: {fileID: 4999778786881636389}
+  m_cursor: {fileID: 557025759679373444, guid: 529a5da9835abfa45bc071fe853fd429, type: 3}
 --- !u!114 &5005028938690610594
 MonoBehaviour:
   m_ObjectHideFlags: 0
