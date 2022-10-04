@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Numerics;
 using Mirror;
 using Unity.Mathematics;
@@ -32,6 +33,10 @@ public class Target : NetworkBehaviour
     private void OnDisable()
     {
         NB_PLAYER--;
+        if (isLocalPlayer)
+        {
+            ClickReader.OnClick -= OnClick;
+        }
     }
 
     void Awake()
@@ -42,17 +47,18 @@ public class Target : NetworkBehaviour
     }
 
     void Start()
-    {
-        if (!isLocalPlayer)
+    { 
+        if (isLocalPlayer)
         {
-            m_trailRenderer.enabled = true;
+            SpawnCursor();
+            ClickReader.OnClick += OnClick;
         }
         else
         {
-            SpawnCursor();
+            m_trailRenderer.enabled = true;
         }
+        
     }
-
     private void SpawnCursor()
     {
         Instantiate(m_cursor, transform);
@@ -96,57 +102,20 @@ public class Target : NetworkBehaviour
         if (isLocalPlayer)
         {
             Vector3 pos = Vector3.zero;
-            bool pressed = false;
             
-            Pointer pointer = Pointer.current;
             Pen pen = Pen.current;
             Mouse mouse = Mouse.current;
      
-            if (pen.tip.isPressed || pen.inRange.isPressed)
+            if (pen != null && (pen.tip.isPressed || pen.inRange.isPressed))
             {
                 pos = pen.position.ReadValue();
-                pressed = pen.tip.isPressed;
-            }
-            else if (pointer.press.isPressed)
-            {
-                pos = pointer.position.ReadValue();
-                pressed = true;
             }
             else if (mouse != null) {
                 pos = mouse.position.ReadValue();
-                pressed = mouse.IsPressed();
             }
             
             transform.position = (Vector2)m_mainCam.ScreenToWorldPoint(pos);
-
-            if (pressed && !m_pressed)
-            {
-                RaycastHit2D hit = Physics2D.Raycast(transform.position, -Vector2.up);
-
-                // If it hits something...
-                if (hit.collider != null)
-                {
-                    if (hit.collider.TryGetComponent<Button>(out Button button))
-                    {
-                        button.Click();
-                    }
-                }
-                else
-                {
-                    SetIsDrawing(true, transform.position);
-                }
-
-                m_refreshPosTimer = 0f;
-                m_pressed = true;
-
-            }
-            else if (!pressed && m_pressed)
-            {
-                SetIsDrawing(false, transform.position);
-                m_refreshPosTimer = 0f;
-                m_pressed = false;
-            }
-
+            
             m_refreshPosTimer += Time.deltaTime;
             if (m_refreshPosTimer > 1f / m_refreshFrequency)
             {
@@ -155,6 +124,37 @@ public class Target : NetworkBehaviour
             }
 
             
+        }
+    }
+
+    void OnClick(bool _click)
+    {
+        if (_click && !m_pressed)
+        {
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, -Vector2.up);
+
+            // If it hits something...
+            if (hit.collider != null)
+            {
+                if (hit.collider.TryGetComponent<Button>(out Button button))
+                {
+                    button.Click();
+                }
+            }
+            else
+            {
+                SetIsDrawing(true, transform.position);
+            }
+
+            m_refreshPosTimer = 0f;
+            m_pressed = true;
+
+        }
+        else if (!_click && m_pressed)
+        {
+            SetIsDrawing(false, transform.position);
+            m_refreshPosTimer = 0f;
+            m_pressed = false;
         }
     }
 

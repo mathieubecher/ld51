@@ -19,10 +19,7 @@ public class Client : MonoBehaviour
 #else
         if (!NetworkServer.active)
         {
-            if (Application.platform != RuntimePlatform.WebGLPlayer)
-            {
-                manager.StartClient();
-            }
+            manager.StartClient();
         }
 #endif
     }

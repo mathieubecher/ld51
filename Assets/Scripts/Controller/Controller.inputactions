@@ -1,0 +1,57 @@
+{
+    "name": "Controller",
+    "maps": [
+        {
+            "name": "Default",
+            "id": "1e19a71b-87b8-493a-b23d-2f814069cf4d",
+            "actions": [
+                {
+                    "name": "Click",
+                    "type": "Button",
+                    "id": "d01e35a4-9a6a-4d39-9ee6-ed3941a148cf",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "e66559f4-9629-4bd5-8e0a-0c406c9cd7f7",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Mouse&Pen",
+                    "action": "Click",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "bfc7a6f1-a6d7-4904-8312-bd7bc8c53f5b",
+                    "path": "<Pen>/tip",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Mouse&Pen",
+                    "action": "Click",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": [
+        {
+            "name": "Mouse&Pen",
+            "bindingGroup": "Mouse&Pen",
+            "devices": [
+                {
+                    "devicePath": "<Mouse>",
+                    "isOptional": false,
+                    "isOR": false
+                }
+            ]
+        }
+    ]
+}
